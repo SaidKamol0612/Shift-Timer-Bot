@@ -4,4 +4,3 @@ __all__ = (
 )
 
 from .user import UserSchema
-from .subscription import SubscriptionSchema
