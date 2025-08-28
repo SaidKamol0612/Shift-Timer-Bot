@@ -1,9 +1,8 @@
 __all__ = (
     "BaseCRUD",
-    "UserCRUD",
+    "user_crud",
     "subscription_crud",
 )
 
 from .base import BaseCRUD
-from .user import UserCRUD
-from .subscription import subscription_crud
+from .user import user_crud
