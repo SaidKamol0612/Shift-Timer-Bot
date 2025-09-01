@@ -4,7 +4,7 @@ from aiogram import Router
 from middlewares.chat_type import PrivateChatOnlyMiddleware
 
 # Import the sub-router from handler
-from .handler import router as r
+from .day_shift_handler import router as r
 
 # Initialize main personal router
 router = Router()
