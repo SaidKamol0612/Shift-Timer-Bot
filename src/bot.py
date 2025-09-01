@@ -54,19 +54,21 @@ async def cmd_start(message: Message, state: FSMContext):
         f"{current_user.name if current_user else user.first_name}</a>, botimizga xush kelibsiz\n\n"
     )
     if current_user:
-        text += "💡 Siz pastdagi tugmalarni bosib foydalanishingiz mumkin."
+        text += "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
         if current_user.is_superuser:
             kb = ADMIN_MENU  # reply_markup for admins
+            await state.set_state(BotState.ADMIN_MENU)
         else:
             kb = WORKER_MENU  # reply_markup for workers
+            await state.set_state(BotState.WORKER_MENU)
     else:
         text += (
             "ℹ️ Botimizdan foydalanishdan oldin botga <b>o'z ismingizni</b> yuboring."
         )
+        await state.set_state(BotState.Register.GET_NAME)
         kb = None
 
     log.info("%s started bot", user.first_name or user.username)
-    await state.set_state(BotState.Register.GET_NAME)
     await message.reply(text=text, reply_markup=kb)
 
 
@@ -83,10 +85,11 @@ async def reg_name(message: Message, state: FSMContext):
             ),
         )
 
-    text = "💡 Siz pastdagi tugmalarni bosib foydalanishingiz mumkin."
+    text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
     if current_user.is_superuser:
+        await state.set_state(BotState.ADMIN_MENU)
         kb = ADMIN_MENU  # reply_markup for admins
     else:
+        await state.set_state(BotState.WORKER_MENU)
         kb = WORKER_MENU  # reply_markup for workers
-    await state.set_state(BotState.START)
     await message.answer(text=text, reply_markup=kb)
