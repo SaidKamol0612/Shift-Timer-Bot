@@ -1,6 +1,6 @@
 from aiogram.types import Message
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
-from typing import Callable, Dict, Any, Awaitable
+from typing import Callable, Dict, Any, Awaitable, Union
 
 
 class PrivateChatOnlyMiddleware(BaseMiddleware):
