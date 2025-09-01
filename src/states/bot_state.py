@@ -8,5 +8,10 @@ class BotState(StatesGroup):
 
     START = State()
 
+    ADMIN_MENU = State()
+    
+    WORKER_MENU = State()
+    SET_START = State()
+
     class Register(StatesGroup):
         GET_NAME = State()
