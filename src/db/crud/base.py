@@ -6,11 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 
-from core.config import settings
-
-from db import db_helper
-from ..models.user import User
-
 # Generic type variables
 M = TypeVar("M")  # SQLAlchemy model type (must have 'id' attribute)
 S = TypeVar("S", bound=BaseModel)  # Pydantic schema for CRUD operations
@@ -36,7 +31,7 @@ class BaseCRUD(Generic[M, S]):
             await session.refresh(new_model)
         except IntegrityError as e:
             await session.rollback()
-            log.warning("Catched exception: %s", e)
+            log.warning("Caught exception: %s", e)
             raise e
         return new_model
 
@@ -86,7 +81,7 @@ class BaseCRUD(Generic[M, S]):
             await session.refresh(model)
         except IntegrityError as e:
             await session.rollback()
-            log.warning("Catched exception: %s", e)
+            log.warning("Caught exception: %s", e)
             raise e
 
         return model
