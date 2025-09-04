@@ -1,8 +1,5 @@
 import logging
-
-from core.config import settings
-from db import db_helper
-from db.crud import user_crud
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .load import BotLoader
 
@@ -11,13 +8,8 @@ log = logging.getLogger(__name__)
 
 class AdminUtil:
     @staticmethod
-    async def send_message_to_admins(text: str):
-        bot = BotLoader.get_bot()
-
-        async with db_helper.session_factory() as session:
-            admins = await user_crud.read_all(
-                session=session, filters={"is_superuser": True}
-            )
+    async def send_message_to_admins(session: AsyncSession, text: str, admins: list):
+        bot = await BotLoader.get_bot()
 
         for admin in admins:
             try:
@@ -28,7 +20,7 @@ class AdminUtil:
 
     @staticmethod
     async def send_msg(chat_id: int, msg: str):
-        bot = BotLoader.get_bot()
+        bot = await BotLoader.get_bot()
         try:
             await bot.send_message(chat_id=chat_id, text=msg)
         except Exception as e:
