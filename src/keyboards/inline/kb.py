@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import Optional
 
-from core.enums import Roles
+from core.enums import RoleENUM
 
 WORKER_MENU = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -21,28 +21,33 @@ ADMIN_MENU = InlineKeyboardMarkup(
     ]
 )
 
-ACCEPT_OR_NO = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="✅ Adminga jo'natish", callback_data="accept_shift_report"
-            ),
-            InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"),
-        ],
-    ]
-)
 
-
-def time_keyboard(hour: Optional[int] = 9, minutes: Optional[int] = 0):
+def time_keyboard(
+    hour: Optional[int] = 9,
+    minutes: Optional[int] = 0,
+    min_hour: Optional[int] = 7,
+    min_minutes: Optional[int] = 0,
+    max_hour: Optional[int] = 19,
+    max_minutes: Optional[int] = 30,
+):
     now = f"{hour:02d}:{minutes:02d}"
+    min_t = f"{min_hour:02d}:{min_minutes:02d}"
+    max_t = f"{max_hour:02d}:{max_minutes:02d}"
 
     # Limits:
-    if now == "07:00":
-        minus = "19:00"  # turn to evening
-        plus = "07:30"  # normal plus
-    elif now == "19:00":
-        minus = "18:30"  # normal minus
-        plus = "07:00"  # turn to morning
+    if now == min_t:
+        minus = max_t  # turn to maximum
+        if min_minutes == 30:
+            plus = f"{(min_hour + 1):02d}:{0:02d}"
+        else:
+            plus = f"{min_hour:02d}:{30:02d}"
+
+    elif now == max_t:
+        if max_minutes == 30:
+            minus = f"{(max_hour):02d}:{0:02d}"
+        else:
+            minus = f"{(max_hour - 1):02d}:{30:02d}"
+        plus = min_t  # turn to minimum
     else:
         # universal calculate +30/-30 with wrapping 24 hours around
         def shift_time(h, m, delta):
@@ -109,10 +114,18 @@ def duration_keyboard(hour: Optional[int] = 0, minutes: Optional[int] = 0):
     return kb
 
 
-def roles_keyboard():
+def roles_keyboard(used_roles: Optional[list] = []):
     kb = InlineKeyboardBuilder()
-    for role in Roles:
-        kb.add(
-            InlineKeyboardButton(text=role.title(), callback_data=f"role_{role.name}")
-        )
+    for role in RoleENUM:
+        text = f"➕ {role.title()}"
+        if role.name in used_roles:
+            text = text.replace("➕", "✅")
+        kb.add(InlineKeyboardButton(text=text, callback_data=f"role_{role.name}"))
+    kb.add(
+        InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"),
+        InlineKeyboardButton(
+            text="✅ Tayyor. Adminga jo'natish", callback_data="accept_shift_report"
+        ),
+    )
+
     return kb.adjust(2).as_markup()

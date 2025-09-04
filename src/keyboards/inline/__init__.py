@@ -12,6 +12,5 @@ from .kb import (
     ADMIN_MENU,
     time_keyboard,
     duration_keyboard,
-    roles_keyboard,
-    ACCEPT_OR_NO,
+    roles_keyboard
 )
