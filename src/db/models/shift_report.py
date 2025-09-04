@@ -1,20 +1,20 @@
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy import Date, Enum
-
-from core.enums import Roles
+from sqlalchemy import Date, ForeignKey
 
 from .base import Base
 
 
 class ShiftReport(Base):
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     date = mapped_column(Date, nullable=False)
-    start_hour: Mapped[int] = mapped_column(nullable=False)
-    start_minutes: Mapped[int] = mapped_column(nullable=False)
-    end_hour: Mapped[int] = mapped_column(nullable=False)
-    end_minutes: Mapped[int] = mapped_column(nullable=False)
-    pause_hour: Mapped[int] = mapped_column(nullable=False)
-    pause_minutes: Mapped[int] = mapped_column(nullable=False)
-    role: Mapped[Roles] = mapped_column(Enum(Roles), nullable=False)
+    start_hour: Mapped[int] = mapped_column(nullable=True)
+    start_minutes: Mapped[int] = mapped_column(nullable=True)
+    end_hour: Mapped[int] = mapped_column(nullable=True)
+    end_minutes: Mapped[int] = mapped_column(nullable=True)
+    pause_hour: Mapped[int] = mapped_column(nullable=True)
+    pause_minutes: Mapped[int] = mapped_column(nullable=True)
+    count_dough: Mapped[int] = mapped_column(nullable=True)
+    shift_type: Mapped[str] = mapped_column(nullable=False, comment="Day/Night")
 
     @property
     def work_duration_minutes(self) -> int:

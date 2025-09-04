@@ -1,14 +1,16 @@
-from pydantic import BaseModel, Field
-
-from core.enums import Roles
+from pydantic import BaseModel
+from datetime import date
+from typing import Optional
 
 
 class ShiftReportSchema(BaseModel):
-    date = Field
-    start_hour: int
-    start_minutes: int
-    end_hour: int
-    end_minutes: int
-    pause_hour: int
-    pause_minutes: int
-    role: Roles
+    user_id: int
+    date: date
+    start_hour: Optional[int]
+    start_minutes: Optional[int]
+    end_hour: Optional[int]
+    end_minutes: Optional[int]
+    pause_hour: Optional[int]
+    pause_minutes: Optional[int]
+    count_dough: Optional[int]
+    shift_type: str
