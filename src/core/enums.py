@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 
-class Roles(StrEnum):
+class RoleENUM(StrEnum):
     XAMIRCHI = "xamirchi"
     PECHKACHI = "pechkachi"
     TERUVCHI = "teruvchi"

@@ -1,7 +1,7 @@
 __all__ = (
     "settings",
-    "Roles",
+    "RoleENUM",
 )
 
 from .config import settings
-from .enums import Roles
+from .enums import RoleENUM
