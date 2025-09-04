@@ -1,6 +1,7 @@
 __all__ = (
     "UserSchema",
-    "SubscriptionSchema",
+    "ShiftReportSchema",
 )
 
 from .user import UserSchema
+from .shift_report import ShiftReportSchema
