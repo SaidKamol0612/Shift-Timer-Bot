@@ -11,7 +11,13 @@ class BotState(StatesGroup):
     ADMIN_MENU = State()
     
     WORKER_MENU = State()
-    SET_START = State()
+    
+    class SetDayShift(StatesGroup):
+        SET_START = State()
+        SET_END = State()
+        SET_PAUSE = State()
+        SET_ROLE = State()
+        ACCEPT = State()
 
     class Register(StatesGroup):
         GET_NAME = State()
