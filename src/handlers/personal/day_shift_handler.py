@@ -11,8 +11,8 @@ from keyboards.inline import (
     roles_keyboard,
 )
 from db import db_helper
-from db.crud import user_crud, shift_report_crud, shift_role_crud, role_crud
-from db.schemas import ShiftReportSchema, ShiftRole
+from db.crud import user_crud, shift_report_crud, role_crud, shift_role_crud
+from db.schemas import ShiftReportSchema, ShiftRoleSchema
 from utils import AdminUtil
 from core.enums import RoleENUM
 
@@ -132,7 +132,10 @@ async def call_accept_start_handle(call_back: CallbackQuery, state: FSMContext):
     await call_back.message.edit_text(
         text=text,
         reply_markup=time_keyboard(
-            hour=hour + 1, minutes=minutes, min_hour=hour + 1, max_minutes=minutes
+            hour=18 if hour == 9 else hour + 1,
+            minutes=minutes,
+            min_hour=hour + 1,
+            max_minutes=minutes,
         ),
     )
 
@@ -188,11 +191,11 @@ async def call_accept_duration_handle(call_back: CallbackQuery, state: FSMContex
         f"⏸️ Tanafus olingan vaqt: <b>{hour:02d}:{minutes:02d}</b>.\n"
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.</b>"
     )
-    await state.set_state(BotState.SetDayShift.SET_ROLE)
+    await state.set_state(BotState.SetDayShift.SET_ROLES)
     await call_back.message.edit_text(text=text, reply_markup=roles_keyboard())
 
 
-@router.callback_query(F.data.startswith("role_"), BotState.SetDayShift.SET_ROLE)
+@router.callback_query(F.data.startswith("role_"), BotState.SetDayShift.SET_ROLES)
 async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
     await call_back.answer()
     role = call_back.data.split("_")[1]
@@ -222,13 +225,15 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
         f"{roles}\n"
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.</b>"
     )
-    await state.set_state(BotState.SetDayShift.SET_ROLE)
+    await state.set_state(BotState.SetDayShift.SET_ROLES)
     await call_back.message.edit_text(
         text=text, reply_markup=roles_keyboard(used_roles=used_roles)
     )
 
 
-@router.callback_query(F.data == ("accept_shift_report"), BotState.SetDayShift.SET_ROLE)
+@router.callback_query(
+    F.data == ("accept_shift_report"), BotState.SetDayShift.SET_ROLES
+)
 async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
     used_roles: list[str] = (await state.get_data()).get("roles")
     if not used_roles:
@@ -265,7 +270,6 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
                 end_minutes=int(end_minutes),
                 pause_hour=int(pause_hour),
                 pause_minutes=int(pause_minutes),
-                count_dough=None,
                 shift_type="day",
             ),
         )
@@ -273,7 +277,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
             role = await role_crud.read(session=session, filters={"code": r[0].upper()})
             await shift_role_crud.create(
                 session=session,
-                schema=ShiftRole(
+                schema=ShiftRoleSchema(
                     date=date,
                     role_id=role.id,
                     shift_id=sh.id,
