@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import date
 
 
-class ShiftRole(BaseModel):
+class ShiftRoleSchema(BaseModel):
     date: date
     role_id: int
     shift_id: int

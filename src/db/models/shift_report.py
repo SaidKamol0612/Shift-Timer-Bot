@@ -23,7 +23,9 @@ class ShiftReport(Base):
         pause = self.pause_hour * 60 + self.pause_minutes
         if end < start:
             end += 24 * 60
-        return end - start - pause
+
+        duration = end - start - pause
+        return max(duration, 0)
 
     @property
     def work_duration_hours(self) -> int:

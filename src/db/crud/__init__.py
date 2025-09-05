@@ -3,7 +3,7 @@ __all__ = (
     "user_crud",
     "shift_report_crud",
     "shift_role_crud",
-    "role",
+    "role_crud",
 )
 
 from .base import BaseCRUD
