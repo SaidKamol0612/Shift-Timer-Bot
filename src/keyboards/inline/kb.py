@@ -129,3 +129,26 @@ def roles_keyboard(used_roles: Optional[list] = []):
     )
 
     return kb.adjust(2).as_markup()
+
+
+def count_keyboard(current: int):
+    minus = (current - 1) if current > 1 else 20
+    plus = current + 1 if current < 20 else 1
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="-", callback_data=str(minus)),
+                InlineKeyboardButton(
+                    text=f"{current}", callback_data=f"count_{current}"
+                ),
+                InlineKeyboardButton(text="+", callback_data=str(plus)),
+            ],
+            [
+                InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"),
+                InlineKeyboardButton(
+                    text="✅ Tayyor", callback_data=f"accept_{current}"
+                ),
+            ],
+        ]
+    )

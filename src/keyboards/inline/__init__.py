@@ -4,7 +4,7 @@ __all__ = (
     "time_keyboard",
     "duration_keyboard",
     "roles_keyboard",
-    "ACCEPT_OR_NO",
+    "count_keyboard",
 )
 
 from .kb import (
@@ -12,5 +12,6 @@ from .kb import (
     ADMIN_MENU,
     time_keyboard,
     duration_keyboard,
-    roles_keyboard
+    roles_keyboard,
+    count_keyboard,
 )
