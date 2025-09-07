@@ -10,4 +10,3 @@ class ShiftRole(Base):
     shift_id: Mapped[int] = mapped_column(
         ForeignKey("shift_reports.id"), nullable=False
     )
-    is_approved: Mapped[bool] = mapped_column(nullable=False, default=False)
