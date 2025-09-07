@@ -166,6 +166,8 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
                 shift_type="night",
             ),
         )
+
+        daily = 0
         for r in used_roles:
             role = await role_crud.read(session=session, filters={"code": r[0].upper()})
             await shift_role_crud.create(
@@ -177,6 +179,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
                     is_approved=False,
                 ),
             )
+            daily += role.night_rate * sh.count_dough
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
@@ -185,12 +188,13 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
         "<b>Smena:</b> 🌙 Tungi\n"
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n\n"
         f"{roles}\n"
+        f"<b>Jami:</b> {daily}\n"
     )
 
     await call_back.message.edit_text(
         text=call_back.message.text.replace(
             "\n\nIltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.",
-            " ",
+            f"\n<b>Jami:</b> {daily}",
         ),
         reply_markup=None,
     )

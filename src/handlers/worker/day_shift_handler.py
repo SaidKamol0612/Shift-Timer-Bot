@@ -290,6 +290,8 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
                 shift_type="day",
             ),
         )
+
+        daily = 0
         for r in used_roles:
             role = await role_crud.read(session=session, filters={"code": r[0].upper()})
             await shift_role_crud.create(
@@ -298,9 +300,9 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
                     date=date,
                     role_id=role.id,
                     shift_id=sh.id,
-                    is_approved=False,
                 ),
             )
+            daily += role.day_rate * sh.work_duration_hours
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
@@ -311,12 +313,13 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
         f"⏹️ Ish <b>{end_hour:02d}:{end_minutes:02d}</b> da tugatildi.\n"
         f"⏸️ <b>{pause_hour:02d}:{pause_minutes:02d}</b> tanafus olindi.\n"
         f"{roles}\n"
+        f"<b>Jami:</b> {daily}\n"
     )
 
     await call_back.message.edit_text(
         text=call_back.message.text.replace(
             "\n\nIltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.",
-            " ",
+            f"<b>Jami:</b> {daily}\n",
         ),
         reply_markup=None,
     )
