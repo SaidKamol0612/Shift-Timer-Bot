@@ -1,1 +1,5 @@
-__all__ = ()
+__all__ = (
+    "workers_kb",
+)
+
+from .kb import workers_kb
