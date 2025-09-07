@@ -14,7 +14,8 @@ class ShiftReport(Base):
     pause_hour: Mapped[int] = mapped_column(nullable=True)
     pause_minutes: Mapped[int] = mapped_column(nullable=True)
     count_dough: Mapped[int] = mapped_column(nullable=True)
-    shift_type: Mapped[str] = mapped_column(nullable=False, comment="Day/Night")
+    shift_type: Mapped[str] = mapped_column(nullable=False, comment="day or night")
+    is_approved: Mapped[bool] = mapped_column(nullable=False, default=False)
 
     @property
     def work_duration_minutes(self) -> int:
