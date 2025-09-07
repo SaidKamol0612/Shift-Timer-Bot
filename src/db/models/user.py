@@ -10,5 +10,5 @@ class User(Base):
     """
 
     tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
