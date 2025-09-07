@@ -10,6 +10,11 @@ class BotState(StatesGroup):
 
     ADMIN_MENU = State()
 
+    class SetPayment(StatesGroup):
+        CHOOSE_WORKER = State()
+        SET_AMOUNT = State()
+        SET_COMMENT = State()
+
     WORKER_MENU = State()
 
     class SetDayShift(StatesGroup):
