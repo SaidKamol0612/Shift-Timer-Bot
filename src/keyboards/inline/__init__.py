@@ -5,6 +5,7 @@ __all__ = (
     "duration_keyboard",
     "roles_keyboard",
     "count_keyboard",
+    "report_menu",
 )
 
 from .kb import (
@@ -14,4 +15,5 @@ from .kb import (
     duration_keyboard,
     roles_keyboard,
     count_keyboard,
+    report_menu,
 )

@@ -22,6 +22,23 @@ ADMIN_MENU = InlineKeyboardMarkup(
 )
 
 
+def report_menu(shift_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Qabul qilish.", callback_data=f"approve_{shift_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Bekor qilish", callback_data=f"cancel_{shift_id}"
+                )
+            ],
+        ]
+    )
+
+
 def time_keyboard(
     hour: Optional[int] = 9,
     minutes: Optional[int] = 0,
@@ -29,7 +46,7 @@ def time_keyboard(
     min_minutes: Optional[int] = 0,
     max_hour: Optional[int] = 19,
     max_minutes: Optional[int] = 30,
-):
+) -> InlineKeyboardMarkup:
     now = f"{hour:02d}:{minutes:02d}"
     min_t = f"{min_hour:02d}:{min_minutes:02d}"
     max_t = f"{max_hour:02d}:{max_minutes:02d}"
@@ -75,7 +92,9 @@ def time_keyboard(
     return kb
 
 
-def duration_keyboard(hour: Optional[int] = 0, minutes: Optional[int] = 0):
+def duration_keyboard(
+    hour: Optional[int] = 0, minutes: Optional[int] = 0
+) -> InlineKeyboardMarkup:
     duration = f"{hour:02d}:{minutes:02d}"
 
     # Limits:
@@ -114,7 +133,7 @@ def duration_keyboard(hour: Optional[int] = 0, minutes: Optional[int] = 0):
     return kb
 
 
-def roles_keyboard(used_roles: Optional[list] = []):
+def roles_keyboard(used_roles: Optional[list] = []) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for role in RoleENUM:
         text = f"➕ {role.title()}"
@@ -131,7 +150,7 @@ def roles_keyboard(used_roles: Optional[list] = []):
     return kb.adjust(2).as_markup()
 
 
-def count_keyboard(current: int):
+def count_keyboard(current: int) -> InlineKeyboardMarkup:
     minus = (current - 1) if current > 1 else 20
     plus = current + 1 if current < 20 else 1
 
