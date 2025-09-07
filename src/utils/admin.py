@@ -1,5 +1,6 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.types import InlineKeyboardMarkup
 
 from .load import BotLoader
 
@@ -8,15 +9,16 @@ log = logging.getLogger(__name__)
 
 class AdminUtil:
     @staticmethod
-    async def send_message_to_admins(session: AsyncSession, text: str, admins: list):
+    async def send_report_to_admin(
+        text: str, reply_markup: InlineKeyboardMarkup, admin
+    ):
         bot = await BotLoader.get_bot()
-
-        for admin in admins:
-            try:
-                await bot.send_message(chat_id=admin.tg_id, text=text)
-            except Exception as e:
-                logging.warning(f"Message to admin {admin.name} failed: {e}")
-        return text
+        try:
+            await bot.send_message(
+                chat_id=admin.tg_id, text=text, reply_markup=reply_markup
+            )
+        except Exception as e:
+            logging.warning(f"Message to admin {admin.name} failed: {e}")
 
     @staticmethod
     async def send_msg(chat_id: int, msg: str):
