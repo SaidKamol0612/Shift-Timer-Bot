@@ -3,7 +3,12 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from datetime import date as PyDate
 
-from keyboards.inline import count_keyboard, WORKER_MENU, roles_keyboard
+from keyboards.inline import (
+    count_keyboard,
+    WORKER_MENU,
+    roles_keyboard,
+    report_menu,
+)
 from states import BotState
 from db import db_helper
 from db.crud import user_crud, role_crud, shift_report_crud, shift_role_crud
@@ -15,6 +20,24 @@ router = Router()
 
 @router.callback_query(F.data == "night_shift", BotState.WORKER_MENU)
 async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
+    async with db_helper.session_factory() as session:
+        curr = await user_crud.read(
+            session=session, filters={"tg_id": call_back.from_user.id}
+        )
+        sh = await shift_report_crud.read(
+            session=session,
+            filters={
+                "user_id": curr.id,
+                "shift_type": "night",
+                "date": PyDate.today(),
+                "is_approved": True,
+            },
+        )
+    if sh:
+        text = "⚠️ Siz bugun, kunduzgi smena uchun hisobot kiritib bo'lgansiz va boshqa kirita olmaysiz."
+        await call_back.answer(text=text, show_alert=True)
+        return
+
     today = PyDate.today()
     text = (
         f"<b>📅 Sana:</b> {today}\n"
@@ -102,7 +125,7 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
     roles = " ".join([role.title() for role in used_roles])
     text = (
         f"<b>📅 Sana:</b> {date}\n"
-        "<b>Smena:</b> ☀️ Kunduzgi\n"
+        "<b>Smena:</b> 🌙 Tungi\n"
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n"
         f"{roles}\n"
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.</b>"
@@ -133,9 +156,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
 
     async with db_helper.session_factory() as session:
         current_user = await user_crud.read(session=session, filters={"tg_id": user.id})
-        admins = await user_crud.read_all(
-            session=session, filters={"is_superuser": True}
-        )
+        admin = await user_crud.read(session=session, filters={"is_superuser": True})
         sh = await shift_report_crud.create(
             session=session,
             schema=ShiftReportSchema(
@@ -161,7 +182,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
     text = (
         f"Ishchi: {current_user.name}"
         f"<b>📅 Sana:</b> {date}\n"
-        "<b>Smena:</b> ☀️ Kunduzgi\n"
+        "<b>Smena:</b> 🌙 Tungi\n"
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n\n"
         f"{roles}\n"
     )
@@ -173,9 +194,9 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
         ),
         reply_markup=None,
     )
-    # TODO: add accepting report logic for admins
-    await AdminUtil.send_message_to_admins(session=session, text=text, admins=admins)
-    await call_back.message.answer(text="✅ Qabul qilindi.")
+    await AdminUtil.send_report_to_admin(
+        text=text, reply_markup=report_menu(shift_id=sh.id), admin=admin
+    )
 
     await state.set_state(BotState.WORKER_MENU)
     await call_back.message.answer(
