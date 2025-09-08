@@ -2,8 +2,8 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 
 from db import db_helper
-from db.crud import shift_report_crud, user_crud
-from db.schemas import ShiftReportUpdateSchema
+from db.crud import shift_crud, user_crud
+from db.schemas import ShiftUpdateSchema
 from utils import AdminUtil
 
 router = Router()
@@ -13,10 +13,10 @@ router = Router()
 async def handle_approve(call_back: CallbackQuery):
     sh_id = call_back.data.split("_")[1]
     async with db_helper.session_factory() as session:
-        shift = await shift_report_crud.update(
+        shift = await shift_crud.update(
             session=session,
             model_id=int(sh_id),
-            schema=ShiftReportUpdateSchema(is_approved=True),
+            schema=ShiftUpdateSchema(is_approved=True),
         )
         worker = await user_crud.read(session=session, filters={"id": shift.user_id})
     await call_back.message.edit_reply_markup(reply_markup=None)
@@ -29,12 +29,12 @@ async def handle_approve(call_back: CallbackQuery):
 async def handle_approve(call_back: CallbackQuery):
     sh_id = call_back.data.split("_")[1]
     async with db_helper.session_factory() as session:
-        shift = await shift_report_crud.read(
+        shift = await shift_crud.read(
             session=session,
             filters={"id": int(sh_id)},
         )
         worker = await user_crud.read(session=session, filters={"id": shift.user_id})
-        await shift_report_crud.delete(session=session, model_id=shift.id)
+        await shift_crud.delete(session=session, model_id=shift.id)
     await call_back.message.delete()
     await call_back.answer(text="❌ Bekor qilindi.", show_alert=True)
     text = "❌ Sizning hisobot admin tomonidan bekor qilindi."

@@ -8,7 +8,7 @@ from db import db_helper
 from db.crud import user_crud, payment_crud
 from db.schemas import PaymentSchema
 from keyboards.reply import workers_kb
-from keyboards.inline import ADMIN_MENU
+from keyboards.inline import InlineKeyboards
 from utils import AdminUtil
 
 
@@ -36,7 +36,7 @@ async def choose_worker_handler(message: Message, state: FSMContext):
     if text == "❌ Bekor qilish":
         text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
         await state.set_state(BotState.ADMIN_MENU)
-        kb = ADMIN_MENU
+        kb = InlineKeyboards.admin_menu()
         await message.answer(
             text="❌ Bekor qilindi", reply_markup=ReplyKeyboardRemove()
         )
@@ -109,5 +109,5 @@ async def handle_comment(message: Message, state: FSMContext):
     await message.answer(text=text.replace("WORKER_NAME", f"<b>{user.name}</b>ga"))
     text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
     await state.set_state(BotState.ADMIN_MENU)
-    kb = ADMIN_MENU
+    kb = InlineKeyboards.Menus.admin_menu()
     await message.answer(text=text, reply_markup=kb)
