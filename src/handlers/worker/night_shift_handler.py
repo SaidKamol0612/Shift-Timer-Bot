@@ -3,17 +3,14 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from datetime import date as PyDate
 
-from keyboards.inline import (
-    count_keyboard,
-    WORKER_MENU,
-    roles_keyboard,
-    report_menu,
-)
+from keyboards.inline import InlineKeyboards
 from states import BotState
 from db import db_helper
-from db.crud import user_crud, role_crud, shift_report_crud, shift_role_crud
-from db.schemas import ShiftReportSchema, ShiftRoleSchema
+from db.crud import user_crud, shift_crud, shift_role_crud
+from services import role_service
+from db.schemas import ShiftSchema, ShiftRoleSchema
 from utils import AdminUtil
+from core.enums import ShiftTypeENUM
 
 router = Router()
 
@@ -24,7 +21,7 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
         curr = await user_crud.read(
             session=session, filters={"tg_id": call_back.from_user.id}
         )
-        sh = await shift_report_crud.read(
+        sh = await shift_crud.read(
             session=session,
             filters={
                 "user_id": curr.id,
@@ -47,14 +44,16 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
     await state.update_data(date=today)
     await state.set_state(BotState.SetNightShift.SET_COUNT)
     await call_back.message.delete()
-    await call_back.message.answer(text=text, reply_markup=count_keyboard(current=10))
+    await call_back.message.answer(
+        text=text, reply_markup=InlineKeyboards.Pickers.count_picker_kb(current=10)
+    )
 
 
 @router.callback_query(F.data == ("cancel"))
 async def cancel(call_back: CallbackQuery, state: FSMContext):
     text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
     await state.set_state(BotState.WORKER_MENU)
-    kb = WORKER_MENU  # reply_markup for workers
+    kb = InlineKeyboards.Menus.worker_menu()  # reply_markup for workers
     await call_back.message.edit_text(text=text, reply_markup=kb)
 
 
@@ -84,7 +83,7 @@ async def handle_count_pm(call_back: CallbackQuery, state: FSMContext):
     current = int(call_back.data)
 
     await call_back.message.edit_reply_markup(
-        reply_markup=count_keyboard(current=current)
+        reply_markup=InlineKeyboards.Pickers.count_picker_kb(current=current)
     )
 
 
@@ -104,7 +103,9 @@ async def call_accept_count_handle(call_back: CallbackQuery, state: FSMContext):
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n"
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.</b>"
     )
-    await call_back.message.edit_text(text=text, reply_markup=roles_keyboard())
+    await call_back.message.edit_text(
+        text=text, reply_markup=InlineKeyboards.Shift.roles_keyboard()
+    )
 
 
 @router.callback_query(F.data.startswith("role_"), BotState.SetNightShift.SET_ROLES)
@@ -124,6 +125,7 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
+        "Sizning ish kuningiz bo'yicha hisobot.\n"
         f"<b>📅 Sana:</b> {date}\n"
         "<b>Smena:</b> 🌙 Tungi\n"
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n"
@@ -132,7 +134,8 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
     )
     await state.set_state(BotState.SetNightShift.SET_ROLES)
     await call_back.message.edit_text(
-        text=text, reply_markup=roles_keyboard(used_roles=used_roles)
+        text=text,
+        reply_markup=InlineKeyboards.Shift.roles_keyboard(used_roles=used_roles),
     )
 
 
@@ -157,29 +160,28 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
     async with db_helper.session_factory() as session:
         current_user = await user_crud.read(session=session, filters={"tg_id": user.id})
         admin = await user_crud.read(session=session, filters={"is_superuser": True})
-        sh = await shift_report_crud.create(
+        sh = await shift_crud.create(
             session=session,
-            schema=ShiftReportSchema(
+            schema=ShiftSchema(
                 user_id=current_user.id,
                 date=date,
                 count_dough=int(count),
-                shift_type="night",
+                shift_type=ShiftTypeENUM.NIGHT,
             ),
         )
 
         daily = 0
         for r in used_roles:
-            role = await role_crud.read(session=session, filters={"code": r[0].upper()})
+            role = role_service.read_role(code=r[0])
             await shift_role_crud.create(
                 session=session,
                 schema=ShiftRoleSchema(
                     date=date,
-                    role_id=role.id,
+                    role_code=role.code,
                     shift_id=sh.id,
-                    is_approved=False,
                 ),
             )
-            daily += role.night_rate * sh.count_dough
+            daily += role.night_rate_for_dough * sh.count_dough
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
@@ -199,11 +201,13 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
         reply_markup=None,
     )
     await AdminUtil.send_report_to_admin(
-        text=text, reply_markup=report_menu(shift_id=sh.id), admin=admin
+        text=text,
+        reply_markup=InlineKeyboards.Shift.approve_or_cancel_shift_kb(shift_id=sh.id),
+        admin=admin,
     )
 
     await state.set_state(BotState.WORKER_MENU)
     await call_back.message.answer(
         text="💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin.",
-        reply_markup=WORKER_MENU,
+        reply_markup=InlineKeyboards.Menus.worker_menu(),
     )
