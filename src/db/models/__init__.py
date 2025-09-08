@@ -1,15 +1,13 @@
 __all__ = (
     "Base",
     "User",
-    "ShiftReport",
-    "Role",
+    "Shift",
     "ShiftRole",
     "Payment",
 )
 
 from .base import Base
 from .user import User
-from .shift_report import ShiftReport
-from .role import Role
+from .shift import Shift
 from .shift_role import ShiftRole
 from .payment import Payment

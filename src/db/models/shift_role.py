@@ -6,7 +6,5 @@ from .base import Base
 
 class ShiftRole(Base):
     date = mapped_column(Date, nullable=False)
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
-    shift_id: Mapped[int] = mapped_column(
-        ForeignKey("shift_reports.id"), nullable=False
-    )
+    role_code: Mapped[str] = mapped_column(nullable=False)
+    shift_id: Mapped[int] = mapped_column(ForeignKey("shifts.id"), nullable=False)
