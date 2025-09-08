@@ -1,7 +1,7 @@
 __all__ = (
     "UserSchema",
-    "ShiftReportSchema",
-    "ShiftReportUpdateSchema",
+    "ShiftSchema",
+    "ShiftUpdateSchema",
     "ShiftRoleSchema",
     "RoleSchema",
     "PaymentSchema",
@@ -9,7 +9,7 @@ __all__ = (
 )
 
 from .user import UserSchema
-from .shift_report import ShiftReportSchema, ShiftReportUpdateSchema
+from .shift import ShiftSchema, ShiftUpdateSchema
 from .shift_role import ShiftRoleSchema
 from .role import RoleSchema
 from .payment import PaymentSchema, PaymentUpdateSchema
