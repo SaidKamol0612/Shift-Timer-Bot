@@ -9,12 +9,11 @@ from aiogram.fsm.context import FSMContext
 from handlers import router as main_router
 from utils import BotLoader
 from core.config import settings
-from core.enums import RoleENUM
 from states.bot_state import BotState
 from db import db_helper
-from db.crud import user_crud, role_crud
-from db.schemas import UserSchema, RoleSchema
-from keyboards.inline import WORKER_MENU, ADMIN_MENU
+from db.crud import user_crud
+from db.schemas import UserSchema
+from keyboards.inline import InlineKeyboards
 
 # Initialize dispatcher with in-memory FSM storage
 dp = Dispatcher(storage=MemoryStorage())
@@ -28,45 +27,6 @@ async def start_bot() -> None:
     """
     Initialize bot instance, include router, and start polling.
     """
-    async with db_helper.session_factory() as session:
-        r = await role_crud.read(session=session, filters={"id": 1})
-        if not r:
-            await role_crud.create(
-                session=session,
-                schema=RoleSchema(
-                    code="X",
-                    role=RoleENUM.XAMIRCHI,
-                    day_rate=50_000,
-                    night_rate=10_000,
-                ),
-            )
-            await role_crud.create(
-                session=session,
-                schema=RoleSchema(
-                    code="P",
-                    role=RoleENUM.PECHKACHI,
-                    day_rate=50_000,
-                    night_rate=10_000,
-                ),
-            )
-            await role_crud.create(
-                session=session,
-                schema=RoleSchema(
-                    code="T",
-                    role=RoleENUM.TERUVCHI,
-                    day_rate=50_000,
-                    night_rate=10_000,
-                ),
-            )
-            await role_crud.create(
-                session=session,
-                schema=RoleSchema(
-                    code="O",
-                    role=RoleENUM.OSHPAZ,
-                    day_rate=50_000,
-                    night_rate=10_000,
-                ),
-            )
 
     # Initialize Bot using BotLoader
     bot = await BotLoader.init_bot(settings.bot.token)
@@ -97,10 +57,10 @@ async def cmd_start(message: Message, state: FSMContext):
     if current_user:
         text += "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
         if current_user.is_superuser:
-            kb = ADMIN_MENU  # reply_markup for admins
+            kb = InlineKeyboards.Menus.admin_menu()  # reply_markup for admins
             await state.set_state(BotState.ADMIN_MENU)
         else:
-            kb = WORKER_MENU  # reply_markup for workers
+            kb = InlineKeyboards.Menus.worker_menu()  # reply_markup for workers
             await state.set_state(BotState.WORKER_MENU)
     else:
         text += (
@@ -129,8 +89,8 @@ async def reg_name(message: Message, state: FSMContext):
     text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
     if current_user.is_superuser:
         await state.set_state(BotState.ADMIN_MENU)
-        kb = ADMIN_MENU  # reply_markup for admins
+        kb = InlineKeyboards.Menus.admin_menu()  # reply_markup for admins
     else:
         await state.set_state(BotState.WORKER_MENU)
-        kb = WORKER_MENU  # reply_markup for workers
+        kb = InlineKeyboards.Menus.worker_menu()  # reply_markup for workers
     await message.answer(text=text, reply_markup=kb)
