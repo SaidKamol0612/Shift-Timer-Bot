@@ -4,18 +4,13 @@ from aiogram.fsm.context import FSMContext
 from datetime import date as PyDate
 
 from states.bot_state import BotState
-from keyboards.inline import (
-    time_keyboard,
-    WORKER_MENU,
-    duration_keyboard,
-    roles_keyboard,
-    report_menu,
-)
+from keyboards.inline import InlineKeyboards
 from db import db_helper
-from db.crud import user_crud, shift_report_crud, role_crud, shift_role_crud
-from db.schemas import ShiftReportSchema, ShiftRoleSchema
+from db.crud import user_crud, shift_crud, shift_role_crud
+from services import role_service
+from db.schemas import ShiftSchema, ShiftRoleSchema
 from utils import AdminUtil
-from core.enums import RoleENUM
+from core.enums import ShiftTypeENUM
 
 # Initialize router
 router = Router()
@@ -27,7 +22,7 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
         curr = await user_crud.read(
             session=session, filters={"tg_id": call_back.from_user.id}
         )
-        sh = await shift_report_crud.read(
+        sh = await shift_crud.read(
             session=session,
             filters={
                 "user_id": curr.id,
@@ -50,7 +45,9 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
     await state.update_data(date=today)
     await state.set_state(BotState.SetDayShift.SET_START)
     await call_back.message.delete()
-    await call_back.message.answer(text=text, reply_markup=time_keyboard())
+    await call_back.message.answer(
+        text=text, reply_markup=InlineKeyboards.Pickers.time_picker_kb()
+    )
 
 
 @router.callback_query(F.data, BotState.SetDayShift.SET_START)
@@ -96,7 +93,7 @@ async def call_time_pause_handle(call_back: CallbackQuery, state: FSMContext):
 async def cancel(call_back: CallbackQuery, state: FSMContext):
     text = "💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin."
     await state.set_state(BotState.WORKER_MENU)
-    kb = WORKER_MENU  # reply_markup for workers
+    kb = InlineKeyboards.Menus.worker_menu()  # reply_markup for workers
     await call_back.message.edit_text(text=text, reply_markup=kb)
 
 
@@ -118,7 +115,7 @@ async def handle_time_pm(call_back: CallbackQuery, state: FSMContext):
     start_minutes = (await state.get_data()).get("start_minutes", 0)
 
     await call_back.message.edit_reply_markup(
-        reply_markup=time_keyboard(
+        reply_markup=InlineKeyboards.Pickers.time_picker_kb(
             hour=hour,
             minutes=minutes,
             min_hour=(start_hour + 1),
@@ -150,8 +147,8 @@ async def call_accept_start_handle(call_back: CallbackQuery, state: FSMContext):
     await state.set_state(BotState.SetDayShift.SET_END)
     await call_back.message.edit_text(
         text=text,
-        reply_markup=time_keyboard(
-            hour=18 if hour == 9 else hour + 1,
+        reply_markup=InlineKeyboards.Pickers.time_picker_kb(
+            hour=18 if hour == 8 else hour + 1,
             minutes=minutes,
             min_hour=hour + 1,
             max_minutes=minutes,
@@ -182,7 +179,9 @@ async def call_accept_end_handle(call_back: CallbackQuery, state: FSMContext):
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida tanafus olgan vaqtingizni tanlang.</b>"
     )
     await state.set_state(BotState.SetDayShift.SET_PAUSE)
-    await call_back.message.edit_text(text=text, reply_markup=duration_keyboard())
+    await call_back.message.edit_text(
+        text=text, reply_markup=InlineKeyboards.Pickers.duration_picker_kb()
+    )
 
 
 async def call_accept_duration_handle(call_back: CallbackQuery, state: FSMContext):
@@ -211,7 +210,9 @@ async def call_accept_duration_handle(call_back: CallbackQuery, state: FSMContex
         "\n<b>Iltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.</b>"
     )
     await state.set_state(BotState.SetDayShift.SET_ROLES)
-    await call_back.message.edit_text(text=text, reply_markup=roles_keyboard())
+    await call_back.message.edit_text(
+        text=text, reply_markup=InlineKeyboards.Shift.roles_keyboard()
+    )
 
 
 @router.callback_query(F.data.startswith("role_"), BotState.SetDayShift.SET_ROLES)
@@ -236,6 +237,7 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
+        "Sizning ish kuningiz bo'yicha hisobot.\n"
         f"<b>📅 Sana:</b> {date}\n"
         "<b>Smena:</b> ☀️ Kunduzgi\n"
         f"▶️ Ish <b>{start_hour:02d}:{start_minutes:02d}</b> da boshlandi.\n"
@@ -246,7 +248,8 @@ async def call_accept_role_handle(call_back: CallbackQuery, state: FSMContext):
     )
     await state.set_state(BotState.SetDayShift.SET_ROLES)
     await call_back.message.edit_text(
-        text=text, reply_markup=roles_keyboard(used_roles=used_roles)
+        text=text,
+        reply_markup=InlineKeyboards.Shift.roles_keyboard(used_roles=used_roles),
     )
 
 
@@ -267,68 +270,70 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
     user = call_back.from_user
     date = (await state.get_data()).get("date")
     start_hour = (await state.get_data()).get("start_hour")
-    start_minutes = (await state.get_data()).get("start_minutes")
+    start_minute = (await state.get_data()).get("start_minutes")
     end_hour = (await state.get_data()).get("end_hour")
-    end_minutes = (await state.get_data()).get("end_minutes")
-    pause_hour = (await state.get_data()).get("pause_hour")
+    end_minute = (await state.get_data()).get("end_minutes")
+    pause_hours = (await state.get_data()).get("pause_hour")
     pause_minutes = (await state.get_data()).get("pause_minutes")
 
     async with db_helper.session_factory() as session:
         current_user = await user_crud.read(session=session, filters={"tg_id": user.id})
         admin = await user_crud.read(session=session, filters={"is_superuser": True})
-        sh = await shift_report_crud.create(
+        sh = await shift_crud.create(
             session=session,
-            schema=ShiftReportSchema(
+            schema=ShiftSchema(
                 user_id=current_user.id,
                 date=date,
                 start_hour=int(start_hour),
-                start_minutes=int(start_minutes),
+                start_minute=int(start_minute),
                 end_hour=int(end_hour),
-                end_minutes=int(end_minutes),
-                pause_hour=int(pause_hour),
+                end_minute=int(end_minute),
+                pause_hours=int(pause_hours),
                 pause_minutes=int(pause_minutes),
-                shift_type="day",
+                shift_type=ShiftTypeENUM.DAY,
             ),
         )
 
         daily = 0
         for r in used_roles:
-            role = await role_crud.read(session=session, filters={"code": r[0].upper()})
+            role = role_service.read_role(code=r[0])
             await shift_role_crud.create(
                 session=session,
                 schema=ShiftRoleSchema(
                     date=date,
-                    role_id=role.id,
+                    role_code=role.code,
                     shift_id=sh.id,
                 ),
             )
-            daily += role.day_rate * sh.work_duration_hours
+            daily += role.day_rate_for_hour * sh.work_duration_hours
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
         f"Ishchi: {current_user.name}"
         f"<b>📅 Sana:</b> {date}\n"
         "<b>Smena:</b> ☀️ Kunduzgi\n"
-        f"▶️ Ish <b>{start_hour:02d}:{start_minutes:02d}</b> da boshlandi.\n"
-        f"⏹️ Ish <b>{end_hour:02d}:{end_minutes:02d}</b> da tugatildi.\n"
-        f"⏸️ <b>{pause_hour:02d}:{pause_minutes:02d}</b> tanafus olindi.\n"
+        f"▶️ Ish <b>{start_hour:02d}:{start_minute:02d}</b> da boshlandi.\n"
+        f"⏹️ Ish <b>{end_hour:02d}:{end_minute:02d}</b> da tugatildi.\n"
+        f"⏸️ <b>{pause_hours:02d}:{pause_minutes:02d}</b> tanafus olindi.\n"
         f"{roles}\n"
-        f"<b>Jami:</b> {daily}\n"
+        f"\n<b>Jami:</b> {daily}\n"
     )
 
     await call_back.message.edit_text(
         text=call_back.message.text.replace(
             "\n\nIltimos, endi pastdagi tugmalar yordamida qanday ishlarda ishlaganingizni tanlang.",
-            f"<b>Jami:</b> {daily}\n",
+            f"\n<b>Jami:</b> {daily}\n",
         ),
         reply_markup=None,
     )
     await AdminUtil.send_report_to_admin(
-        text=text, reply_markup=report_menu(sh.id), admin=admin
+        text=text,
+        reply_markup=InlineKeyboards.Shift.approve_or_cancel_shift_kb(sh.id),
+        admin=admin,
     )
 
     await state.set_state(BotState.WORKER_MENU)
     await call_back.message.answer(
         text="💡 Pastdagi tugmalarni bosib foydalanishingiz mumkin.",
-        reply_markup=WORKER_MENU,
+        reply_markup=InlineKeyboards.Menus.worker_menu(),
     )
