@@ -1,0 +1,26 @@
+[
+    {
+        "code": "X",
+        "title": "Xamirchi",
+        "day_rate_for_hour": 20000,
+        "night_rate_for_dough": 10000
+    },
+    {
+        "code": "P",
+        "title": "Pechkachi",
+        "day_rate_for_hour": 15000,
+        "night_rate_for_dough": 10000
+    },
+    {
+        "code": "T",
+        "title": "Teruvchi",
+        "day_rate_for_hour": 12000,
+        "night_rate_for_dough": 10000
+    },
+    {
+        "code": "O",
+        "title": "Oshpaz",
+        "day_rate_for_hour": 50000,
+        "night_rate_for_dough": 0
+    }
+]
