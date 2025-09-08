@@ -1,4 +1,4 @@
-# ⏱️ Shift Timer Bot - ⚠️ NOT FINISHED
+# ⏱️ Shift Timer Bot
 
 ### ℹ️ Description
 
