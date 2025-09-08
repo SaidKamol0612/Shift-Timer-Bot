@@ -15,6 +15,9 @@ class BotState(StatesGroup):
         SET_AMOUNT = State()
         SET_COMMENT = State()
 
+    class GetReport(StatesGroup):
+        CHOOSE_WORKER = State()
+
     WORKER_MENU = State()
 
     class SetDayShift(StatesGroup):
