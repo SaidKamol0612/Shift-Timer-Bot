@@ -1,8 +1,13 @@
-from enum import StrEnum
+from enum import Enum
 
 
-class RoleENUM(StrEnum):
-    XAMIRCHI = "xamirchi"
-    PECHKACHI = "pechkachi"
-    TERUVCHI = "teruvchi"
-    OSHPAZ = "oshpaz"
+class RoleENUM(Enum):
+    X = "Xamirchi"
+    P = "Pechkachi"
+    T = "Teruvchi"
+    O = "Oshpaz"
+
+
+class ShiftTypeENUM(Enum):
+    DAY = "DAY"
+    NIGHT = "NIGHT"
