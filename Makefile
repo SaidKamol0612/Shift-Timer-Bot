@@ -12,4 +12,4 @@ build:
 
 run:
 	@echo "Building ShiftTimerBot..."
-	cd src && ../$(PYTHON) main.py
+	cd src && ../$(PYTHON) run.py
