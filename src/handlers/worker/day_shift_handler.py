@@ -26,7 +26,7 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
             session=session,
             filters={
                 "user_id": curr.id,
-                "shift_type": "day",
+                "shift_type": "DAY",
                 "date": PyDate.today(),
                 "is_approved": True,
             },
@@ -148,7 +148,7 @@ async def call_accept_start_handle(call_back: CallbackQuery, state: FSMContext):
     await call_back.message.edit_text(
         text=text,
         reply_markup=InlineKeyboards.Pickers.time_picker_kb(
-            hour=18 if hour == 8 else hour + 1,
+            hour=18,
             minutes=minutes,
             min_hour=hour + 1,
             max_minutes=minutes,
@@ -309,7 +309,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
-        f"Ishchi: {current_user.name}"
+        f"Ishchi: {current_user.name}\n"
         f"<b>📅 Sana:</b> {date}\n"
         "<b>Smena:</b> ☀️ Kunduzgi\n"
         f"▶️ Ish <b>{start_hour:02d}:{start_minute:02d}</b> da boshlandi.\n"

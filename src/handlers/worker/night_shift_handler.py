@@ -25,7 +25,7 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
             session=session,
             filters={
                 "user_id": curr.id,
-                "shift_type": "night",
+                "shift_type": "NIGHT",
                 "date": PyDate.today(),
                 "is_approved": True,
             },
@@ -45,7 +45,7 @@ async def call_day_shift_handle(call_back: CallbackQuery, state: FSMContext):
     await state.set_state(BotState.SetNightShift.SET_COUNT)
     await call_back.message.delete()
     await call_back.message.answer(
-        text=text, reply_markup=InlineKeyboards.Pickers.count_picker_kb(current=10)
+        text=text, reply_markup=InlineKeyboards.Pickers.count_picker_kb(current=8)
     )
 
 
@@ -185,7 +185,7 @@ async def accept_shift_role(call_back: CallbackQuery, state: FSMContext):
 
     roles = " ".join([role.title() for role in used_roles])
     text = (
-        f"Ishchi: {current_user.name}"
+        f"Ishchi: {current_user.name}\n"
         f"<b>📅 Sana:</b> {date}\n"
         "<b>Smena:</b> 🌙 Tungi\n"
         f"🔢 <b>{count}</b> ta xamir qorilgan.\n\n"
