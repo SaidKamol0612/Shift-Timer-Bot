@@ -20,11 +20,11 @@ class BaseCRUD(Generic[M, S]):
     """
 
     def __init__(self, model_type: Type[M]):
-        self.MODEL_TYPE = model_type
+        self.model = model_type
 
     async def create(self, session: AsyncSession, schema: S) -> M:
         """Create a new record."""
-        new_model = self.MODEL_TYPE(**schema.model_dump())
+        new_model = self.model(**schema.model_dump())
         session.add(new_model)
         try:
             await session.commit()
@@ -39,14 +39,14 @@ class BaseCRUD(Generic[M, S]):
         self, session: AsyncSession, filters: Optional[Dict[str, Any]] = None
     ) -> Optional[M]:
         """Retrieve a single record matching filters."""
-        stmt = select(self.MODEL_TYPE)
+        stmt = select(self.model)
         if filters:
             for field, value in filters.items():
-                if hasattr(self.MODEL_TYPE, field):
-                    stmt = stmt.where(getattr(self.MODEL_TYPE, field) == value)
+                if hasattr(self.model, field):
+                    stmt = stmt.where(getattr(self.model, field) == value)
                 else:
                     raise ValueError(
-                        f"Field '{field}' does not exist on {self.MODEL_TYPE.__name__}"
+                        f"Field '{field}' does not exist on {self.model.__name__}"
                     )
         return await session.scalar(stmt)
 
@@ -54,14 +54,14 @@ class BaseCRUD(Generic[M, S]):
         self, session: AsyncSession, filters: Optional[Dict[str, Any]] = None
     ) -> List[M]:
         """Retrieve all records matching optional filters."""
-        stmt = select(self.MODEL_TYPE)
+        stmt = select(self.model)
         if filters:
             for field, value in filters.items():
-                if hasattr(self.MODEL_TYPE, field):
-                    stmt = stmt.where(getattr(self.MODEL_TYPE, field) == value)
+                if hasattr(self.model, field):
+                    stmt = stmt.where(getattr(self.model, field) == value)
                 else:
                     raise ValueError(
-                        f"Field '{field}' does not exist on {self.MODEL_TYPE.__name__}"
+                        f"Field '{field}' does not exist on {self.model.__name__}"
                     )
         result = await session.scalars(stmt)
         return result.all()
