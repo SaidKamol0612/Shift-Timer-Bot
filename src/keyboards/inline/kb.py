@@ -40,7 +40,7 @@ class InlineKeyboards:
         @staticmethod
         def time_picker_kb(
             hour: Optional[int] = 8,
-            minutes: Optional[int] = 0,
+            minutes: Optional[int] = 30,
             min_hour: Optional[int] = 7,
             min_minutes: Optional[int] = 0,
             max_hour: Optional[int] = 19,
